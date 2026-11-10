@@ -1,6 +1,6 @@
 # Phase 1 — Agent Loop
 
-- **Status:** Planning
+- **Status:** Done (verified with scripted models; a live model run is still pending)
 - **Goal:** Build the smallest useful agent runtime.
 - **Prev:** [overview.md](overview.md) · **Next:** [phase2.md](phase2.md)
 
@@ -139,13 +139,13 @@ This exercises multi-step reasoning, repeated tool use, and result incorporation
 
 The agent can:
 
-- [ ] receive a request
-- [ ] call the model
-- [ ] interpret tool calls
-- [ ] execute registered tools
-- [ ] provide tool results back to the model
-- [ ] continue the loop
-- [ ] produce a final response
+- [x] receive a request
+- [x] call the model
+- [x] interpret tool calls
+- [x] execute registered tools
+- [x] provide tool results back to the model
+- [x] continue the loop
+- [x] produce a final response
 
 ## 7. Exit Criteria / Unlocks
 

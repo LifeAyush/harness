@@ -1,6 +1,6 @@
 # DeepSeek-Style Agent Harness — Overview
 
-- **Status:** Planning
+- **Status:** Phase 1 done, Phase 2 next
 - **Purpose:** Define the phased implementation of the agent harness.
 - **Primary Goal:** Build a DeepSeek-style agent runtime from first principles, with a focus on backend and distributed-system design.
 
