@@ -1,5 +1,7 @@
 # harness
 
+[![ci](https://github.com/LifeAyush/harness/actions/workflows/ci.yml/badge.svg)](https://github.com/LifeAyush/harness/actions/workflows/ci.yml)
+
 An agent runtime built from first principles: the infrastructure that turns an LLM into an agent that uses tools, keeps state and stops reliably. No LangChain, no LangGraph. The loop, tool registry and provider boundary are written here, so each one can be understood and replaced.
 
 ```text
@@ -76,3 +78,7 @@ tests/         loop, tools, provider and API tests
 ## License
 
 MIT
+
+---
+
+Building something similar, or stuck on an agent loop or tool calling? Happy to dig in with you: [grab 30 min](https://cal.com/ayush-patil-s2zg3v/30min).
