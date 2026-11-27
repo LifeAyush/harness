@@ -96,6 +96,12 @@ core/session/events.py      # event types + payload schemas
 
 Minimum event taxonomy: `user_message`, `model_response`, `tool_call`, `tool_result`, plus session lifecycle events (`session_created`, `session_resumed`, `session_completed`, `session_failed`).
 
+### Implemented so far
+
+- `core/session/events.py`: typed pydantic events (`session_created`, `model_call_requested/completed`, `tool_call_requested/completed/failed`, `session_completed` with its stop reason). Each carries `session_id`, `sequence_number` (from 0) and a UTC timestamp.
+- `core/session/store.py`: `EventStore` interface and an in-memory store. Appends must carry the next `sequence_number`; gaps and rewrites are rejected, mirroring the planned `(session_id, sequence_number)` UNIQUE constraint.
+- Not yet: the loop emitting events, a persistent store, resume. The completion criteria below stay unchecked until they work end to end.
+
 ## 4. Core Flow
 
 Crash scenario without persistence:
