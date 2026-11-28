@@ -100,7 +100,11 @@ Minimum event taxonomy: `user_message`, `model_response`, `tool_call`, `tool_res
 
 - `core/session/events.py`: typed pydantic events (`session_created`, `model_call_requested/completed`, `tool_call_requested/completed/failed`, `session_completed` with its stop reason). Each carries `session_id`, `sequence_number` (from 0) and a UTC timestamp.
 - `core/session/store.py`: `EventStore` interface and an in-memory store. Appends must carry the next `sequence_number`; gaps and rewrites are rejected, mirroring the planned `(session_id, sequence_number)` UNIQUE constraint.
-- Not yet: the loop emitting events, a persistent store, resume. The completion criteria below stay unchecked until they work end to end.
+- `core/session/store.py` also has `SQLiteEventStore` (standard-library `sqlite3`, no new dependency): one `events` table with `PRIMARY KEY (session_id, sequence_number)`, the event stored as JSON, insert-only. The in-memory and SQLite stores run the same contract tests.
+- `core/agent/loop.py` appends every step to an injected `EventStore` (in-memory by default) under a `session_id` returned as `run_id` by the API. The step trace in the API/CLI response is still built the Phase 1 way, alongside the events.
+- Config: `HARNESS_EVENT_STORE=memory|sqlite` and `HARNESS_EVENT_DB` for the API; `--event-store` and `--event-db` for the CLI. The default stays in-memory.
+- Deviation from the plan above: storage starts with SQLite instead of PostgreSQL, so the log persists without an external service or a new dependency. The `EventStore` interface is the same, so a PostgreSQL store can slot in later.
+- Not yet: resume, replay from events, an endpoint to read a run's events. The completion criteria below stay unchecked until they work end to end.
 
 ## 4. Core Flow
 

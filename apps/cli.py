@@ -10,7 +10,7 @@ import asyncio
 import json
 import sys
 
-from apps.factory import MODELS, build_model, build_registry
+from apps.factory import MODELS, STORES, build_model, build_registry, build_store
 from core.agent.agent import StopReason
 from core.agent.loop import Limits, run
 
@@ -28,6 +28,8 @@ async def main(argv: list[str] | None = None) -> int:
     p.add_argument("--model", choices=MODELS, default="demo")
     p.add_argument("--max-iterations", type=int, default=10)
     p.add_argument("--timeout", type=float, default=120.0)
+    p.add_argument("--event-store", choices=STORES, default="memory", help="where the run's events are kept")
+    p.add_argument("--event-db", default=None, help="SQLite file for --event-store sqlite (default: harness-events.db)")
     args = p.parse_args(argv)
 
     try:
@@ -35,10 +37,15 @@ async def main(argv: list[str] | None = None) -> int:
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
+    store = build_store(args.event_store, args.event_db)
     try:
-        state = await run(args.task, model, build_registry(args.root), Limits(args.max_iterations, args.timeout))
+        state = await run(
+            args.task, model, build_registry(args.root), Limits(args.max_iterations, args.timeout), store=store
+        )
     finally:
         await model.aclose()
+        if hasattr(store, "close"):
+            store.close()
 
     for step in state.steps:
         d = step.data
@@ -53,6 +60,8 @@ async def main(argv: list[str] | None = None) -> int:
         else:
             flag = "ERROR " if d["is_error"] else ""
             print(f"[{step.index:>2}] tool   {d['name']}: {flag}{_short(d['result'])}")
+    if args.event_store == "sqlite":
+        print(f"\nrun {state.session_id}: events saved to {args.event_db or 'harness-events.db'}")
     print(f"\nstop: {state.stop_reason.value} · {state.iteration} model calls · ~{state.usage.total} tokens")
     if state.error:
         print(f"error: {state.error}")

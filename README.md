@@ -12,14 +12,15 @@ Agent capability ≈ model + harness + environment + state
 
 ## What works now
 
-- **Agent loop** ([core/agent/loop.py](core/agent/loop.py)). Model → tool calls → results → model, until there's a final answer. Every run ends in one of: final answer, `max_iterations`, wall-clock timeout, token budget, or model error. Each model and tool call is recorded as a step, ready to become an event in Phase 2.
+- **Agent loop** ([core/agent/loop.py](core/agent/loop.py)). Model → tool calls → results → model, until there's a final answer. Every run ends in one of: final answer, `max_iterations`, wall-clock timeout, token budget, or model error. Each model and tool call is recorded as a step and appended to an event log (see below).
 - **Tools** ([core/tools](core/tools)). A tool is a name, a description, a pydantic input model and an async `run`. The input model provides both the JSON Schema the model sees and the validation, so they can't drift apart. The registry turns unknown tools, bad arguments, exceptions and timeouts into error results that go back to the model, which can then correct itself. Adding a tool is one `register` call; the loop doesn't change.
 - **Filesystem tools.** `filesystem.list` and `filesystem.read`, confined to one root directory. Path traversal and symlinks out of the root are blocked, binary files are refused, and output is capped.
 - **Model providers** ([core/model](core/model)):
   - `OpenAICompatibleProvider` works with DeepSeek (default), OpenAI, or any `/chat/completions` server with tool calling. It retries 429 and 5xx responses, and maps dotted tool names to wire-safe ones and back.
   - `ScriptedModel` replays fixed turns, for tests.
   - `DemoModel` follows a hard-coded plan for the example task, so everything runs without an API key. It pattern-matches source; it doesn't reason.
-- **API and CLI.** `POST /v1/runs` and `python -m apps.cli` both return the answer, the stop reason, token usage and the full step trace.
+- **Event log** ([core/session/](core/session/), [docs/phase2.md](docs/phase2.md)). Each run appends typed events (`session_created`, `model_call_*`, `tool_call_*`, `session_completed` with the stop reason) to an `EventStore`. The default is in-memory; `HARNESS_EVENT_STORE=sqlite` (or `--event-store sqlite` on the CLI) persists them to a SQLite file. Replay and resume are not built yet.
+- **API and CLI.** `POST /v1/runs` and `python -m apps.cli` both return the answer, the stop reason, token usage and the full step trace (the API also returns a `run_id`).
 
 Not verified yet: a live run against a real model. The provider is tested against a mocked HTTP transport only.
 

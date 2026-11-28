@@ -17,6 +17,7 @@ from core.session.store import (
     SequenceError,
     SequenceGapError,
     SequenceRewriteError,
+    SQLiteEventStore,
 )
 
 __all__ = [
@@ -29,6 +30,7 @@ __all__ = [
     "SequenceError",
     "SequenceGapError",
     "SequenceRewriteError",
+    "SQLiteEventStore",
     "SessionCompleted",
     "SessionCreated",
     "ToolCallCompleted",
