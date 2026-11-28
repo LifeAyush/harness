@@ -50,6 +50,7 @@ class AgentState:
     answer: str | None = None
     stop_reason: StopReason | None = None
     error: str | None = None
+    session_id: str = ""  # id of the run's event log
 
     @classmethod
     def start(cls, task: str, system_prompt: str = DEFAULT_SYSTEM_PROMPT) -> "AgentState":

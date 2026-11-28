@@ -2,6 +2,8 @@
 
   HARNESS_MODEL  demo (default) or openai
   HARNESS_ROOT   directory the filesystem tools may read (default: current directory)
+  HARNESS_EVENT_STORE  memory (default) or sqlite
+  HARNESS_EVENT_DB     SQLite file for the sqlite store (default: harness-events.db)
 
   uvicorn apps.api.main:app
 """
@@ -15,7 +17,7 @@ from typing import Any
 from fastapi import FastAPI, Request
 from pydantic import BaseModel, Field
 
-from apps.factory import build_model, build_registry
+from apps.factory import build_model, build_registry, build_store
 from core.agent.loop import Limits, run
 
 
@@ -26,6 +28,7 @@ class RunRequest(BaseModel):
 
 
 class RunResponse(BaseModel):
+    run_id: str
     answer: str | None
     stop_reason: str
     error: str | None
@@ -38,8 +41,12 @@ class RunResponse(BaseModel):
 async def lifespan(app: FastAPI):
     app.state.model = build_model(os.environ.get("HARNESS_MODEL", "demo"))
     app.state.registry = build_registry(os.environ.get("HARNESS_ROOT", "."))
+    app.state.store = build_store(os.environ.get("HARNESS_EVENT_STORE", "memory"), os.environ.get("HARNESS_EVENT_DB"))
     yield
     await app.state.model.aclose()
+    close = getattr(app.state.store, "close", None)
+    if close:
+        close()
 
 
 app = FastAPI(title="harness", version="0.1.0", lifespan=lifespan)
@@ -57,8 +64,10 @@ async def create_run(body: RunRequest, request: Request):
         request.app.state.model,
         request.app.state.registry,
         Limits(max_iterations=body.max_iterations, timeout_s=body.timeout_s),
+        store=request.app.state.store,
     )
     return RunResponse(
+        run_id=state.session_id,
         answer=state.answer,
         stop_reason=state.stop_reason.value,
         error=state.error,
